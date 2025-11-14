@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-//#include "world.h"
+#include "world.h"
 #include "draw.h"
 #include "raylib.h"
 
@@ -19,7 +19,7 @@ ranking get(){
 }
 
 const int screenWidth = 800;
-const int screenHeight = 450;
+const int screenHeight = 800;
 
 Rectangle botaoStart = {screenWidth/2-80,screenHeight/2-20,160,40};
 Rectangle botaoRanking = {screenWidth/2-80,screenHeight/2-20+60,160,40};
@@ -28,12 +28,6 @@ Rectangle botaoDificuldade = {screenWidth/2-80,screenHeight/2-20+120,160,40};
 Rectangle botoes[] = {botaoStart,botaoRanking,botaoDificuldade};
 
 int fase = 0; // 0 = menu, 1 = ranking, 2 = dificuldade, 3 = fase_1, 4 = fase_1, 5 = fase 3
-
-void add(){}
-
-// world.h
-
-void start(){}
 
 // int main
 
@@ -49,7 +43,7 @@ int main(){
     
     while (!WindowShouldClose())    // Detect window close button or ESC key
     {
-        
+        w_update(GetFrameTime());
         if (IsMouseButtonPressed(0)){
             int joy = -1;
             for (int i = 0; i<3; i++){
@@ -61,6 +55,7 @@ int main(){
             switch (joy)
             {
             case 0:
+                start(0);
                 fase = 3;
                 break;
             case 1:

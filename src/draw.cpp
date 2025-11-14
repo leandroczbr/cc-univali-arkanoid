@@ -1,11 +1,13 @@
-
 #include "raylib.h"
+#include "world.h"
 
 void draw(int fase, Rectangle botoes[]){
 
     BeginDrawing();
 
     ClearBackground(RAYWHITE);
+
+    if (fase > 2){ w_draw(); EndDrawing(); return; }
 
     switch (fase)
     {
@@ -37,5 +39,4 @@ void draw(int fase, Rectangle botoes[]){
     }
 
     EndDrawing();
-
 };

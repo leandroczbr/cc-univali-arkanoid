@@ -3,6 +3,7 @@
 #include <vector>
 #include <algorithm>
 #include <ctime>
+#include <string>
 
 using namespace std;
 
