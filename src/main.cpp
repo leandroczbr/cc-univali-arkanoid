@@ -43,8 +43,11 @@ int main(){
     
     while (!WindowShouldClose())    // Detect window close button or ESC key
     {
-        w_update(GetFrameTime());
-        if (IsMouseButtonPressed(0)){
+        
+        switch (fase)
+        {
+        case 0:
+              if (IsMouseButtonPressed(0)){
             int joy = -1;
             for (int i = 0; i<3; i++){
                 if (CheckCollisionPointRec(GetMousePosition(),botoes[i])){
@@ -67,6 +70,24 @@ int main(){
             default:
                 break;
             }
+        }
+            break;
+        case 1:
+            /* code */
+            break;
+        case 2:
+            /* code */
+            break;
+        case 3:
+        case 4:
+        case 5:
+            if (w_update(GetFrameTime())){
+                fase = 0;
+            }
+        break;
+        
+        default:
+            break;
         }
 
         draw(fase,botoes);
