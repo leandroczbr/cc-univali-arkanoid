@@ -18,8 +18,8 @@ ranking get(){
     return {"j",323};
 }
 
-const int screenWidth = 800;
-const int screenHeight = 800;
+const int screenWidth = 700;
+const int screenHeight = 700;
 
 Rectangle botaoStart = {screenWidth/2-80,screenHeight/2-20,160,40};
 Rectangle botaoRanking = {screenWidth/2-80,screenHeight/2-20+60,160,40};
@@ -36,8 +36,8 @@ int main(){
     /*Texture2D background = LoadTexture("../assets/background-green.png");
     Texture2D paddleSm = LoadTexture("../assets/paddle-sm.png");
     Texture2D paddleLg = LoadTexture("../assets/paddle-lg.png");
-    Texture2D paddleMd = LoadTexture("../assets/paddle-md.png");
-    SetTargetFPS(60);*/
+    Texture2D paddleMd = LoadTexture("../assets/paddle-md.png");*/
+    SetTargetFPS(60);
 
     InitWindow(screenWidth, screenHeight, "raylib [shapes] example - basic shapes");
     
