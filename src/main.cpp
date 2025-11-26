@@ -27,7 +27,8 @@ Rectangle botaoDificuldade = {screenWidth/2-80,screenHeight/2-20+120,160,40};
 
 Rectangle botoes[] = {botaoStart,botaoRanking,botaoDificuldade};
 
-int fase = 0; // 0 = menu, 1 = ranking, 2 = dificuldade, 3 = fase_1, 4 = fase_1, 5 = fase 3
+int fase = 0; // 0 = menu, 1 = ranking, 2 = dificuldade, 3 = fase_1, 4 = fase_2, 5 = fase 3
+int dificuldade = 0; // 0, 1, 2
 
 // int main
 
@@ -58,7 +59,7 @@ int main(){
             switch (joy)
             {
             case 0:
-                start(0);
+                start(dificuldade);
                 fase = 3;
                 break;
             case 1:
@@ -76,12 +77,24 @@ int main(){
             /* code */
             break;
         case 2:
-            /* code */
+            if (IsMouseButtonPressed(0)){
+                for (int i = 0; i<3; i++){
+                    if (CheckCollisionPointRec(GetMousePosition(),botoes[i])){
+                        dificuldade = i;
+                        fase = 0;
+                        break;
+                    }
+                }
+            }
             break;
         case 3:
         case 4:
         case 5:
             if (w_update(GetFrameTime())){
+                if (ganhou){
+                    fase ++;
+                    start(dificuldade);
+                }
                 fase = 0;
             }
         break;

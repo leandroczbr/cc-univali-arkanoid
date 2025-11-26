@@ -23,6 +23,13 @@ void draw(int fase, Rectangle botoes[]){
         /* code */
         break;
     case 2:
+        for(int i = 0; i < 3; i++){
+            DrawRectangleRec(botoes[i], CheckCollisionPointRec(GetMousePosition(),botoes[i]) ? BLUE : GOLD);
+        }
+        DrawText("Fácil", botoes[0].x+20, botoes[0].y+10, 20, DARKGRAY);
+        DrawText("Médio", botoes[1].x+20, botoes[1].y+10, 20, DARKGRAY);
+        DrawText("Difícil", botoes[2].x+20, botoes[2].y+10, 20, DARKGRAY);
+        break;
         /* code */
         break;
     case 3:

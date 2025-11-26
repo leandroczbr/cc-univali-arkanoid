@@ -4,17 +4,21 @@
 #include <ctime>
 #include <vector>
 #include <cmath>
+#include "world.h"
 
 using namespace std;
 
 struct block
 {
-    Color cor;
-    int state = 0;
+    int colorBase;
+    int state = 0; // 0 = dead, state > 0 = vida
 };
 
 int screenWidth = 700;
 int screenHeight = 700;
+
+int blocosDestruidos;
+int quantidadeDeBlocos;
 
 int pvcSize, sizex, sizey, coordx, coordy, newx, newy;
 float tileSizex, tileSizey, pvcPos, ballx, bally, ballvelx, ballvely;
@@ -26,20 +30,26 @@ bool morreu;
 vector<vector<block>> blocos;
 
 void start(int dificuldade){
+ 
+    ganhou = true;
+
     cout << "mann" << endl;
     srand(time(0));
 
-    sizex = 10; sizey = 10;
+    sizex = 3; sizey = 3;
     tileSizex = ((float)screenWidth/(float)sizex);
     tileSizey = ((float)screenHeight/(float)sizey/2);
 
     pvcPos = screenWidth/2;
-    pvcSize = 100;
+    pvcSize = 500;
+
+    blocosDestruidos = 0;
+    quantidadeDeBlocos = sizex*sizey;
 
     ballx = pvcPos+2;
     bally = screenWidth-70+2;
-    ballvelx = 400.0f;
-    ballvely = -100.0f;
+    ballvelx = 400.0f * (1 + (float)dificuldade/4);
+    ballvely = -400.0f * (1 + (float)dificuldade/4);
 
     morreu = false;
 
@@ -47,8 +57,8 @@ void start(int dificuldade){
 
     for (int x = 0; x < sizex; x++){
         for (int y = 0; y < sizey; y++){
-            blocos[x][y].cor = (Color){rand()%206+50, rand()%206+50, rand()%206+50, 255};
-            blocos[x][y].state = 1;
+            blocos[x][y].colorBase = rand()%206+50;
+            blocos[x][y].state = rand()%3+1;
         }
     }
 }
@@ -67,7 +77,7 @@ bool calcHit(float dt, int count){
 
     float movementx = ballvelx * dt, movementy = ballvely * dt;
 
-    if (abs(movementx) > tileSizex || abs(movementy) > tileSizey){
+    /*if (abs(movementx) > tileSizex || abs(movementy) > tileSizey){
         float unit = max(abs(movementx) / tileSizex, abs(movementy) / tileSizey);
 
         movementx /= unit;
@@ -76,7 +86,7 @@ bool calcHit(float dt, int count){
         float mag = 1 - (1/unit);
 
         calcHit(mag*dt,count + 1);
-    }
+    }*/
 
     float newballx = ballx + movementx;
     float newbally = bally + movementy;
@@ -96,20 +106,70 @@ bool calcHit(float dt, int count){
     newx = (int)floor((newballx / ((float)screenWidth/(float)sizex)));
     newy = (int)floor(newbally / ((float)screenHeight/(float)sizey/2));
 
-    int teste = ((newx != coordx) ? 1 : 0) + ((newy != coordy) ? 2 : 0);
+    int testex = 0;
+    int testey = 0;
     
-    switch (teste)
-    {
-    case 0:
+    
+
+    if(newx != coordx){
+        testex = 1;
+        if (newx < sizex && newy < sizey && blocos[newx][coordy].state > 0){
+            testex = 2;
+        } else if (newballx > screenWidth || newballx < 0){
+            testex = 3;
+            cout << "TESTE" << endl;
+        }
+    }
+    
+    if(newy != coordy){
+        testey = 1;
+        if (newx < sizex && newy < sizey && blocos[coordx][newy].state > 0){
+            testey = 2;
+        } else if (newbally < 0){
+            testey = 3;
+        }
+    }
+
+    if (testex > 1){
+        ballvelx *= -1;
+    }
+    if (testey > 1){
+        ballvely *= -1;
+    }
+    if (testex < 2){
+        coordx = newx;
         ballx = newballx;
-        bally = newbally;
-        break;
-    case 1:
+    }bally = newbally;
+    if (testey < 2){
+        bally = newbally;  
+        coordy = newy;
+    }
+    if (testex == 2){
+        blocos[newx][coordx].state--;
+        if (blocos[newx][coordx].state <= 0){
+            blocosDestruidos ++;
+            if (blocosDestruidos >= quantidadeDeBlocos){
+                ganhou = true;
+                return true;
+            }
+        }
+    }
+    if (testey == 2){
+        blocos[coordx][newy].state--;
+        if (blocos[coordx][newy].state <= 0){
+            blocosDestruidos ++;
+            if (blocosDestruidos >= quantidadeDeBlocos){
+                ganhou = true;
+                return true;
+            }
+        }
+    }
+    /*if(testex){
         
-        if (newx < sizex && newy < sizey && blocos[newx][newy].state == 1){
-            blocos[newx][newy].state = 0;
+        if (newx < sizex && newy < sizey && blocos[newx][newy].state > 0){
+            blocos[newx][newy].state--;
             ballvelx *= -1;
-        } else if(newx > (sizex-1) || newx < 0){
+        }else if(newx > (sizex-1) || newx < 0){
             float diff = (newballx >= screenWidth) ? (float)screenWidth : 0.0f;
 
             cout << "borda: " << diff << " " << newballx << " = " << ballx << " + " << movementx << endl;
@@ -122,9 +182,12 @@ bool calcHit(float dt, int count){
             printf("side calling with a mag of %f, dt of %f, velx of %f, and ballx of %f\n",mag,dt,ballvelx,ballx);
 
             calcHit(mag*dt,count + 1);
+        } else {
+            wallx = false;
         }
-        break;
-    case 2:
+    }
+  
+    if(testey){
         if (newx < sizex && newy < sizey && blocos[newx][newy].state == 1){
             blocos[newx][newy].state = 0;
             ballvely *= -1;
@@ -138,32 +201,26 @@ bool calcHit(float dt, int count){
 
             calcHit(mag*dt,count + 1);
         }
-        break;
-    case 3:
+    }
+    
         cout << "quina" << endl;
-
-        posNWx = coordx *       tileSizex;
-        posNWy = coordy *       tileSizey;
-
-        posNEx = (coordx+1) *   tileSizex;
-        posNEy = coordy *       tileSizey;
-
-        posSWx = coordx *       tileSizex;
-        posSWy = (coordy+1) *   tileSizey;
-
-        posSEx = (coordx+1) *   tileSizex;
-        posSEy = (coordy+1) *   tileSizey;        
-
-        if (newx < sizex && newy < sizey && blocos[newx][newy].state == 1){
+        
+        int testex = (newballx > screenWidth || newballx < 0);
+        if (testex){
+            ballvelx *= -1;
+        }
+        
+        //int testey = (newy < sizey || newy >= 0) && (blocos[newx][newy].state == 1);
+        
+        /*if (newx < sizex && newy < sizey && blocos[newx][newy].state == 1){
             blocos[newx][newy].state = 0;
             ballvelx *= -1;
             ballvely *= -1;
-        }   
+        }  
         break;    
-    }
+    }*/
     
-    coordx = newx;
-    coordy = newy;
+    
 
     //cout << "CHANGED" << endl;
 
@@ -180,19 +237,16 @@ bool w_update(float dt){
 void w_draw(){
     for (int x = 0; x < sizex; x++){
         for (int y = 0; y < sizey; y++){
-            if (blocos[x][y].state == 1){
-                DrawRectangle(screenWidth/sizex*x,screenHeight/sizey/2*y,screenWidth/sizex,screenHeight/sizey/2,blocos[x][y].cor);
+            if (blocos[x][y].state > 0){;
+                int corBase = blocos[x][y].colorBase;
+                Color temp = (Color){blocos[x][y].state == 1 ? corBase : 0,blocos[x][y].state == 2 ? corBase : 0,blocos[x][y].state == 3 ? corBase : 0,255};
+                DrawRectangle(screenWidth/sizex*x,screenHeight/sizey/2*y,screenWidth/sizex,screenHeight/sizey/2,temp);
             }
         }
     }
-    DrawRectangle(coordx * tileSizex,coordy * tileSizey,tileSizex,tileSizey,GOLD);
+    //DrawRectangle(coordx * tileSizex,coordy * tileSizey,tileSizex,tileSizey,GOLD);
     DrawRectangle(pvcPos-pvcSize/2, screenWidth-50, pvcSize,20,GOLD);
     DrawCircle((int)ballx, (int)bally, 5, BLACK);
 
     DrawLine(debug_lastx,debug_lasty,debug_nowx,debug_nowy,GREEN);
-
-    DrawCircle((int)posNWx, (int)posNWy, 2, BLACK); 
-    DrawCircle((int)posNEx, (int)posNEy, 2, BLACK); 
-    DrawCircle((int)posSWx, (int)posSWy, 2, BLACK); 
-    DrawCircle((int)posSEx, (int)posSEy, 2, BLACK);
 }
