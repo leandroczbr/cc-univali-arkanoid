@@ -1,17 +1,40 @@
 #include "raylib.h"
 #include "world.h"
+#include "draw.h"
+#include <iostream>
+
+using namespace std;
+
+Texture2D tfundo;
+int sw2, sh2;
+
+void loadloadload(int sw, int sh){
+    sw2 = sw;
+    sh2 = sh;
+    cout << "debug1" << endl;
+    Image fundo = LoadImage("..\\assets\\fundo.png");
+    cout << "debug2" << endl;
+    ImageResize(&fundo, sw, sh);
+    cout << "debug3" << endl;
+    tfundo = LoadTextureFromImage(fundo);
+    cout << "debug4" << endl;
+    UnloadImage(fundo);
+}
 
 void draw(int fase, Rectangle botoes[]){
 
     BeginDrawing();
 
-    ClearBackground(RAYWHITE);
+    ClearBackground(BLACK);
 
     if (fase > 2){ w_draw(); EndDrawing(); return; }
 
     switch (fase)
     {
     case 0:
+        cout << "debug5" << endl;
+        DrawTexture(tfundo, 0, 0, WHITE);  
+        cout << "IMAGEMMMMMMMM" << endl;
         for(int i = 0; i < 3; i++){
             DrawRectangleRec(botoes[i], CheckCollisionPointRec(GetMousePosition(),botoes[i]) ? BLUE : GOLD);
         }

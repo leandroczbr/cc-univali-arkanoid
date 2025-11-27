@@ -30,8 +30,6 @@ bool morreu;
 vector<vector<block>> blocos;
 
 void start(int dificuldade){
- 
-    ganhou = true;
 
     cout << "mann" << endl;
     srand(time(0));
@@ -71,28 +69,17 @@ float angle(float x1,float y1,float x2,float y2){
     return atan2(det, dot);
 }
 
-bool calcHit(float dt, int count){
+int calcHit(float dt, int count){
 
     //cout << "dt " << dt << " count " << count << " x " << coordx << " y " << coordy << endl;
 
     float movementx = ballvelx * dt, movementy = ballvely * dt;
 
-    /*if (abs(movementx) > tileSizex || abs(movementy) > tileSizey){
-        float unit = max(abs(movementx) / tileSizex, abs(movementy) / tileSizey);
-
-        movementx /= unit;
-        movementy /= unit;
-
-        float mag = 1 - (1/unit);
-
-        calcHit(mag*dt,count + 1);
-    }*/
-
     float newballx = ballx + movementx;
     float newbally = bally + movementy;
 
     if(newbally > screenHeight && morreu){
-        return true;
+        return 1;
     }
 
     if (newbally > screenHeight-50 && !morreu) {
@@ -108,123 +95,73 @@ bool calcHit(float dt, int count){
 
     int testex = 0;
     int testey = 0;
-    
-    
 
     if(newx != coordx){
         testex = 1;
-        if (newx < sizex && newy < sizey && blocos[newx][coordy].state > 0){
+        if (newx >= 0 && newy >= 0 && newx < sizex && newy < sizey && blocos[newx][coordy].state > 0){
             testex = 2;
         } else if (newballx > screenWidth || newballx < 0){
             testex = 3;
-            cout << "TESTE" << endl;
+            cout << "CRASH" << endl;
         }
     }
     
     if(newy != coordy){
         testey = 1;
-        if (newx < sizex && newy < sizey && blocos[coordx][newy].state > 0){
+        if (newx >= 0 && newy >= 0 && newx < sizex && newy < sizey && blocos[coordx][newy].state > 0){
             testey = 2;
         } else if (newbally < 0){
             testey = 3;
         }
     }
 
-    if (testex > 1){
+    if (testex > 1){ // horizontal hit
         ballvelx *= -1;
-    }
-    if (testey > 1){
-        ballvely *= -1;
-    }
-    if (testex < 2){
+    } else {
         coordx = newx;
         ballx = newballx;
-    }bally = newbally;
-    if (testey < 2){
+    }
+    if (testey > 1){ // vertical hit
+        ballvely *= -1;
+    } else {
         bally = newbally;  
         coordy = newy;
     }
+
     if (testex == 2){
         blocos[newx][coordx].state--;
         if (blocos[newx][coordx].state <= 0){
             blocosDestruidos ++;
+            cout << blocosDestruidos << "/" << quantidadeDeBlocos << endl;
             if (blocosDestruidos >= quantidadeDeBlocos){
-                ganhou = true;
-                return true;
+                return 2;
             }
         }
     }
+
     if (testey == 2){
         blocos[coordx][newy].state--;
         if (blocos[coordx][newy].state <= 0){
             blocosDestruidos ++;
+            cout << blocosDestruidos << "/" << quantidadeDeBlocos << endl;
             if (blocosDestruidos >= quantidadeDeBlocos){
-                ganhou = true;
-                return true;
+                return 2;
             }
         }
     }
-    /*if(testex){
-        
-        if (newx < sizex && newy < sizey && blocos[newx][newy].state > 0){
-            blocos[newx][newy].state--;
-            ballvelx *= -1;
-        }else if(newx > (sizex-1) || newx < 0){
-            float diff = (newballx >= screenWidth) ? (float)screenWidth : 0.0f;
 
-            cout << "borda: " << diff << " " << newballx << " = " << ballx << " + " << movementx << endl;
-
-            float mag = abs(diff - newballx) / abs(movementx);
-            ballx = diff;
-            bally = newbally;
-            ballvelx *= -1;
-
-            printf("side calling with a mag of %f, dt of %f, velx of %f, and ballx of %f\n",mag,dt,ballvelx,ballx);
-
-            calcHit(mag*dt,count + 1);
-        } else {
-            wallx = false;
+    if(testex == 1 && testey == 1 && blocos[newx][newy].state > 0){
+        blocos[newx][newy].state--;
+        if (blocos[newx][newy].state <= 0){
+            blocosDestruidos ++;
+            cout << blocosDestruidos << "/" << quantidadeDeBlocos << endl;
+            if (blocosDestruidos >= quantidadeDeBlocos){
+                return 2;
+            }
         }
     }
-  
-    if(testey){
-        if (newx < sizex && newy < sizey && blocos[newx][newy].state == 1){
-            blocos[newx][newy].state = 0;
-            ballvely *= -1;
-        } else if (newbally < 0) {
-            float mag = abs(newbally) / abs(movementy);
-            bally = 0.0f;
-            ballx = newballx;
-            ballvely *= -1;
 
-            printf("up calling with a mag of %f, dt of %f, velx of %f, and ballx of %f\n",mag,dt,ballvelx,ballx);
-
-            calcHit(mag*dt,count + 1);
-        }
-    }
-    
-        cout << "quina" << endl;
-        
-        int testex = (newballx > screenWidth || newballx < 0);
-        if (testex){
-            ballvelx *= -1;
-        }
-        
-        //int testey = (newy < sizey || newy >= 0) && (blocos[newx][newy].state == 1);
-        
-        /*if (newx < sizex && newy < sizey && blocos[newx][newy].state == 1){
-            blocos[newx][newy].state = 0;
-            ballvelx *= -1;
-            ballvely *= -1;
-        }  
-        break;    
-    }*/
-    
-    
-
-    //cout << "CHANGED" << endl;
-
-    return false;
+    return 0;
 }
 
 bool w_update(float dt){
@@ -246,7 +183,7 @@ void w_draw(){
     }
     //DrawRectangle(coordx * tileSizex,coordy * tileSizey,tileSizex,tileSizey,GOLD);
     DrawRectangle(pvcPos-pvcSize/2, screenWidth-50, pvcSize,20,GOLD);
-    DrawCircle((int)ballx, (int)bally, 5, BLACK);
+    DrawCircle((int)ballx, (int)bally, 5, WHITE);
 
-    DrawLine(debug_lastx,debug_lasty,debug_nowx,debug_nowy,GREEN);
+    //DrawLine(debug_lastx,debug_lasty,debug_nowx,debug_nowy,GREEN);
 }

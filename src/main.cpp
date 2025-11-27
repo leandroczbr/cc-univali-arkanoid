@@ -41,6 +41,8 @@ int main(){
     SetTargetFPS(60);
 
     InitWindow(screenWidth, screenHeight, "raylib [shapes] example - basic shapes");
+
+    loadloadload(screenWidth,screenHeight);
     
     while (!WindowShouldClose())    // Detect window close button or ESC key
     {
@@ -89,15 +91,22 @@ int main(){
             break;
         case 3:
         case 4:
-        case 5:
-            if (w_update(GetFrameTime())){
-                if (ganhou){
+        case 5:{
+            int result = w_update(GetFrameTime());
+            
+            switch (result)
+            {
+                case 1: 
+                    fase = 0;
+                break;
+                case 2: 
                     fase ++;
                     start(dificuldade);
-                }
-                fase = 0;
+                break;
             }
-        break;
+
+
+        break;}
         
         default:
             break;
@@ -107,28 +116,6 @@ int main(){
     }
 
     CloseWindow();
-
-    /*int escolha;
-    while (true) {
-        cout << "digite um numero:\n(1) Iniciar Jogo\n(2) Dificuldades\n(3) Pontuação / Rank" << endl;
-        cin >> escolha;
-        switch (escolha)
-        {
-        case 1:
-            /* code * /
-            break;
-        case 2:
-            /* code * /
-            break;
-        case 3:
-            /* code * /
-            break;
-        
-        default:
-            cout << "DIGITE UM NUMERO CERTO" << endl;
-            break;
-        }
-    }*/
 
     return 0;
 }
