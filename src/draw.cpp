@@ -22,7 +22,7 @@ void d_load(int sw, int sh){
     UnloadImage(fundo);
 }
 
-void draw(int fase, Rectangle botoes[],int Tempo){
+void draw(int fase, Rectangle botoes[],float Tempo){
 
     BeginDrawing();
 

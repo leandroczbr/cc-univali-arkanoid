@@ -11,7 +11,7 @@ struct resultado
     bool ganhou;
 };
 
-void start(int df, int pontos = 0);
+void start(int df);
 
 resultado w_update(float dt);
 

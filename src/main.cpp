@@ -132,7 +132,7 @@ int main(){
                         fase = 0;
                     } else {
                         fase ++;
-                        start(dificuldade,pontuacao);
+                        start(dificuldade);
                     }
                 } else {
                     fase = 0;

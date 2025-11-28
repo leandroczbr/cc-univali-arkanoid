@@ -26,7 +26,6 @@ int pvcSize, sizex, sizey, coordx, coordy, newx, newy;
 float tileSizex, tileSizey, pvcPos, ballx, bally, ballvelx, ballvely;
 
 int dificuldade1;
-int pontuacao;
 
 float debug_lastx, debug_lasty, debug_nowx, debug_nowy;
 
@@ -34,9 +33,8 @@ bool morreu;
 
 vector<vector<block>> blocos;
 
-void start(int df, int pontos){
+void start(int df){
 
-    pontuacao = pontos;
     dificuldade1 = df;
 
     cout << "mann" << endl;
@@ -93,6 +91,8 @@ int calcHit(float dt, int count){
     if (newbally > screenHeight-50 && !morreu) {
         if (ballx < pvcPos + (pvcSize/2) && ballx > pvcPos - (pvcSize/2)){
             ballvely *= -1;
+            float rel = -(pvcPos - ballx) / (pvcSize/2);
+            ballvelx = 400.0f * (1 + (float)dificuldade1/4) * rel;
         } else {
             morreu = true;
         }

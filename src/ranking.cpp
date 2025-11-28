@@ -49,6 +49,9 @@ vector<Jogador> carregarRanking() {
             
             pos = linha.find(",");
             j.pontuacao = stoi(linha.substr(0, pos));
+
+            pos = linha.find(",");
+            j.venceu = (linha.substr(0, pos) == "VITORIA" ? true : false);
             
             jogadores.push_back(j);
         }
@@ -77,7 +80,7 @@ void exibirRanking() {
         
         for (size_t i = 0; i < jogadores.size() && i < 10; i++) {
             int y = 110 + i * 40;
-            Color cor = jogadores[i].pontuacao > 2000 ? GREEN : RED;
+            Color cor = jogadores[i].venceu ? GREEN : RED;
             
             // Posição
             DrawText(TextFormat("%d", (int)i+1), 50, y, 20, cor);
@@ -95,7 +98,7 @@ void exibirRanking() {
             DrawText(jogadores[i].data.c_str(), 500, y, 15, cor);
             
             // Status
-            const char* status = jogadores[i].pontuacao > 2000 ? "VITORIA" : "DERROTA";
+            const char* status = jogadores[i].venceu ? "VITORIA" : "DERROTA";
             DrawText(status, 600, y, 15, cor);
         }
     }
