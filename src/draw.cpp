@@ -1,75 +1,50 @@
 #include "raylib.h"
-#include "world.h"
 #include "draw.h"
-#include <iostream>
 #include "ranking.h"
+#include "world.h"
 
-using namespace std;
+Texture2D fundo;
+int sw, sh;
 
-Texture2D tfundo;
-int sw2, sh2;
-
-void d_load(int sw, int sh){
-    sw2 = sw;
-    sh2 = sh;
-    cout << "debug1" << endl;
-    Image fundo = LoadImage("..\\assets\\fundo.png");
-    cout << "debug2" << endl;
-    ImageResize(&fundo, sw, sh);
-    cout << "debug3" << endl;
-    tfundo = LoadTextureFromImage(fundo);
-    cout << "debug4" << endl;
-    UnloadImage(fundo);
+void d_load(int largura, int altura) {
+    sw = largura; sh = altura;
+    Image img = LoadImage("../assets/fundo.png");
+    ImageResizeNN(&img, sw, sh);
+    fundo = LoadTextureFromImage(img);
+    UnloadImage(img);
 }
 
-void draw(int fase, Rectangle botoes[],float Tempo){
-
+void draw(int fase, Rectangle botoes[], float tempo) {
     BeginDrawing();
-
     ClearBackground(BLACK);
+    DrawTexture(fundo, 0, 0, WHITE);
 
-    DrawTexture(tfundo, 0, 0, WHITE);  
+    switch (fase) {
+        case 0: // MENU
+            DrawText("ARKANOID",  250, 200, 40, GOLD);
+            for (int i = 0; i < 3; i++) {
+                DrawRectangleRec(botoes[i], CheckCollisionPointRec(GetMousePosition(), botoes[i]) ? BLUE : GOLD);
+            }
+            DrawText("Iniciar Jogo",     (int)botoes[0].x + 15, (int)botoes[0].y + 10, 20, DARKGRAY);
+            DrawText("Ranking",         (int)botoes[1].x + 35, (int)botoes[1].y + 10, 20, DARKGRAY);
+            DrawText("Dificuldade",     (int)botoes[2].x + 15, (int)botoes[2].y + 10, 20, DARKGRAY);
+            break;
 
-    cout << fase << endl;
-    switch (fase)
-    {
-    case 0:{  // 0 = menu, 1 = ranking, 2 = dificuldade, 3 = fase_1, 4 = fase_2, 5 = fase 3
-        
-        for(int i = 0; i < 3; i++){
-            DrawRectangleRec(botoes[i], CheckCollisionPointRec(GetMousePosition(),botoes[i]) ? BLUE : GOLD);
-        }
-        DrawText("Iniciar jogo", botoes[0].x+20, botoes[0].y+10, 20, DARKGRAY);
-        DrawText("Ranking", botoes[1].x+20, botoes[1].y+10, 20, DARKGRAY);
-        DrawText("Dificuldade", botoes[2].x+20, botoes[2].y+10, 20, DARKGRAY);
-        break;}
-    case 1:{
-        exibirRanking();
-        break;}
-    case 2:
-        for(int i = 0; i < 3; i++){
-            DrawRectangleRec(botoes[i], CheckCollisionPointRec(GetMousePosition(),botoes[i]) ? BLUE : GOLD);
-        }
-        DrawText("Fácil", botoes[0].x+20, botoes[0].y+10, 20, DARKGRAY);
-        DrawText("Médio", botoes[1].x+20, botoes[1].y+10, 20, DARKGRAY);
-        DrawText("Difícil", botoes[2].x+20, botoes[2].y+10, 20, DARKGRAY);
-        break;
-        /* code */
-        break;
-    case 3:
-        /* code */
-        break;
-    case 4:
-        /* code */
-        break;
-    case 5:
-        /* code */
-        break;
-    default:
-        break;
+        case 1: // RANKING
+            exibirRanking();
+            break;
+
+        case 2: // SELEÇÃO DE DIFICULDADE
+            for (int i = 0; i < 3; i++) {
+                DrawRectangleRec(botoes[i], CheckCollisionPointRec(GetMousePosition(), botoes[i]) ? BLUE : GOLD);
+            }
+            DrawText("Fácil",   (int)botoes[0].x + 45, (int)botoes[0].y + 10, 20, DARKGRAY);
+            DrawText("Médio",   (int)botoes[1].x + 45, (int)botoes[1].y + 10, 20, DARKGRAY);
+            DrawText("Difícil", (int)botoes[2].x + 45, (int)botoes[2].y + 10, 20, DARKGRAY);
+            break;
     }
 
-    if (fase > 2){ w_draw(Tempo); }
+    if (fase >= 3) w_draw(tempo);   // Desenha o jogo
 
     EndDrawing();
-    return;
-};
+}

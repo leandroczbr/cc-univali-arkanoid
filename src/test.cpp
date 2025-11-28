@@ -1,5 +1,7 @@
 #include <iostream>
 
+using namespace std;
+
 void printTestMessage() {
-    std::cout << "This is a test message." << std::endl;
+    cout << "This is a test message." << endl;
 }

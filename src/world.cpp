@@ -1,228 +1,164 @@
 #include "raylib.h"
+#include <vector>
 #include <cstdlib>
 #include <iostream>
-#include <ctime>
-#include <vector>
-#include <cmath>
 #include "world.h"
+#include <math.h>
 
 using namespace std;
 
-struct block
-{
+struct Bloco {
     int colorBase;
-    int state = 0; // 0 = dead, state > 0 = vida
+    int state = 0;        // 0 = destruído, 1-3 = vidas restantes
 };
 
-int screenWidth;
-int screenHeight;
+int screenW, screenH;
+int sizex = 3, sizey = 3;                 // Quantidade de blocos (grade)
+float tileSx, tileSy;                     // Tamanho de cada bloco
 
-int blocosDestruidos;
-int quantidadeDeBlocos;
+int blocosDestruidos = 0;
+int totalBlocos = 0;
 
-Texture2D ttijolo[3];
+Texture2D tijoloTex[3];                   // Texturas para 1, 2 e 3 vidas
 
-int pvcSize, sizex, sizey, coordx, coordy, newx, newy;
-float tileSizex, tileSizey, pvcPos, ballx, bally, ballvelx, ballvely;
+float pvcX;                            // Posição horizontal do pvc
+const int pvcSize = 200;
+const int pvcY = 650;                  // Fixo próximo da base
 
-int dificuldade1;
+float ballX, ballY;
+float ballVelX, ballVelY;
+bool perdeu = false;
 
-float debug_lastx, debug_lasty, debug_nowx, debug_nowy;
+int gridX = 0, gridY = 0;                 // Posição atual da bola na grade
+int dificuldadeLocal;
 
-bool morreu;
+vector<vector<Bloco>> blocos;
 
-vector<vector<block>> blocos;
-
-void start(int df){
-
-    dificuldade1 = df;
-
-    cout << "mann" << endl;
+// reset fase
+void start(int df) {
+    dificuldadeLocal = df;
     srand(time(0));
 
     sizex = 3; sizey = 3;
-    tileSizex = ((float)screenWidth/(float)sizex);
-    tileSizey = ((float)screenHeight/(float)sizey/2);
+    tileSx = (float)screenW / sizex;
+    tileSy = (float)screenH / sizey / 2.0f;
 
-    pvcPos = screenWidth/2;
-    pvcSize = 200;
+    pvcX = screenW / 2.0f;
 
     blocosDestruidos = 0;
-    quantidadeDeBlocos = sizex*sizey;
+    totalBlocos = sizex * sizey;
+    perdeu = false;
 
-    ballx = pvcPos+2;
-    bally = screenWidth-70+2;
-    ballvelx = 400.0f * (1 + (float)dificuldade1/4);
-    ballvely = -400.0f * (1 + (float)dificuldade1/4);
+    // Posição inicial da bola
+    ballX = pvcX;
+    ballY = pvcY - 30;
+    float velocidadeBase = 400.0f * (1.0f + dificuldadeLocal * 0.25f);
+    ballVelX = velocidadeBase * 0.3f;
+    ballVelY = -velocidadeBase;
 
-    morreu = false;
-
-    blocos.resize(sizex, vector<block>(sizey));
-
-    for (int x = 0; x < sizex; x++){
-        for (int y = 0; y < sizey; y++){
-            blocos[x][y].colorBase = rand()%206+50;
-            blocos[x][y].state = rand()%3+1;
+    // Cria grade de blocos
+    blocos.resize(sizex, vector<Bloco>(sizey));
+    for (int x = 0; x < sizex; x++)
+        for (int y = 0; y < sizey; y++) {
+            blocos[x][y].colorBase = rand() % 206 + 50;
+            blocos[x][y].state = rand() % 3 + 1;
         }
-    }
 }
 
-float posNWx, posNWy, posNEx, posNEy, posSWx, posSWy, posSEx, posSEy;
+// física
+int verificaColisao(float dt) {
+    float nx = ballX + ballVelX * dt;
+    float ny = ballY + ballVelY * dt;
 
-float angle(float x1,float y1,float x2,float y2){
-    float dot = x1*x2 + y1*y2;
-    float det = x1*y2 - y1*x2;
-    return atan2(det, dot);
-}
+    // Perdeu?
+    if (ny > screenH) return 1;
 
-int calcHit(float dt, int count){
-
-    //cout << "dt " << dt << " count " << count << " x " << coordx << " y " << coordy << endl;
-
-    float movementx = ballvelx * dt, movementy = ballvely * dt;
-
-    float newballx = ballx + movementx;
-    float newbally = bally + movementy;
-
-    if(newbally > screenHeight && morreu){
-        return 1;
-    }
-
-    if (newbally > screenHeight-50 && !morreu) {
-        if (ballx < pvcPos + (pvcSize/2) && ballx > pvcPos - (pvcSize/2)){
-            ballvely *= -1;
-            float rel = -(pvcPos - ballx) / (pvcSize/2);
-            ballvelx = 400.0f * (1 + (float)dificuldade1/4) * rel;
+    // Colisão com pvc
+    if (ny > pvcY - 10 && ny < pvcY + 20 && !perdeu) {
+        if (nx > pvcX - pvcSize/2 && nx < pvcX + pvcSize/2) {
+            ballVelY = -abs(ballVelY);                     // sempre para cima
+            float offset = (nx - pvcX) / (pvcSize / 2.0f);
+            ballVelX = 400.0f * (1.0f + dificuldadeLocal * 0.25f) * offset;
         } else {
-            morreu = true;
-        }
-    }  
-
-    newx = (int)floor((newballx / ((float)screenWidth/(float)sizex)));
-    newy = (int)floor(newbally / ((float)screenHeight/(float)sizey/2));
-
-    int testex = 0;
-    int testey = 0;
-
-    if(newx != coordx){
-        testex = 1;
-        if (newx >= 0 && newy >= 0 && newx < sizex && newy < sizey && blocos[newx][coordy].state > 0){
-            testex = 2;
-        } else if (newballx > screenWidth || newballx < 0){
-            testex = 3;
-            cout << "CRASH" << endl;
-        }
-    }
-    
-    if(newy != coordy){
-        testey = 1;
-        if (newx >= 0 && newy >= 0 && newx < sizex && newy < sizey && blocos[coordx][newy].state > 0){
-            testey = 2;
-        } else if (newbally < 0){
-            testey = 3;
+            perdeu = true;
         }
     }
 
-    if (testex > 1){ // horizontal hit
-        ballvelx *= -1;
+    // sistema de coordenadas
+    int newGridX = (int)(nx / tileSx);
+    int newGridY = (int)(ny / tileSy);
+
+    // borda
+    if (nx < 0 || nx > screenW) { ballVelX = -ballVelX; nx = ballX; }
+    if (ny < 0) { ballVelY = -ballVelY; ny = ballY; }
+
+    // horizontal
+    if (newGridX != gridX && newGridX >= 0 && newGridX < sizex &&
+        newGridY >= 0 && newGridY < sizey && blocos[newGridX][newGridY].state > 0) {
+        ballVelX = -ballVelX;
+        blocos[newGridX][newGridY].state--;
+        if (blocos[newGridX][newGridY].state <= 0) blocosDestruidos++;
     } else {
-        coordx = newx;
-        ballx = newballx;
+        gridX = newGridX;
+        ballX = nx;
     }
-    if (testey > 1){ // vertical hit
-        ballvely *= -1;
+
+    // vertical
+    if (newGridY != gridY && newGridX >= 0 && newGridX < sizex &&
+        newGridY >= 0 && newGridY < sizey && blocos[newGridX][newGridY].state > 0) {
+        ballVelY = -ballVelY;
+        blocos[newGridX][newGridY].state--;
+        if (blocos[newGridX][newGridY].state <= 0) blocosDestruidos++;
     } else {
-        bally = newbally;  
-        coordy = newy;
+        gridY = newGridY;
+        ballY = ny;
     }
 
-    if (testex == 2){
-        blocos[newx][coordx].state--;
-        if (blocos[newx][coordx].state <= 0){
-            blocosDestruidos ++;
-            cout << blocosDestruidos << "/" << quantidadeDeBlocos << endl;
-            if (blocosDestruidos >= quantidadeDeBlocos){
-                return 2;
-            }
-        }
-    }
-
-    if (testey == 2){
-        blocos[coordx][newy].state--;
-        if (blocos[coordx][newy].state <= 0){
-            blocosDestruidos ++;
-            cout << blocosDestruidos << "/" << quantidadeDeBlocos << endl;
-            if (blocosDestruidos >= quantidadeDeBlocos){
-                return 2;
-            }
-        }
-    }
-
-    if(testex == 1 && testey == 1 && blocos[newx][newy].state > 0){
-        blocos[newx][newy].state--;
-        if (blocos[newx][newy].state <= 0){
-            blocosDestruidos ++;
-            cout << blocosDestruidos << "/" << quantidadeDeBlocos << endl;
-            if (blocosDestruidos >= quantidadeDeBlocos){
-                return 2;
-            }
-        }
-    }
-
+    if (blocosDestruidos >= totalBlocos) return 2;   // Vitória
     return 0;
 }
 
-resultado w_update(float dt){
+resultado w_update(float dt) {
     
+    float mov = (IsKeyDown(KEY_D) ? 1.0f : 0.0f) - (IsKeyDown(KEY_A) ? 1.0f : 0.0f);
+    pvcX = min(max(pvcX + mov * dt * 800.0f, pvcSize/2.0f),screenW - pvcSize/2.0f);
 
-    float move = (IsKeyDown(KEY_D) ? 1.0 : 0.0)-(IsKeyDown(KEY_A) ? 1.0 : 0.0);
-    pvcPos = max( min(pvcPos + move*dt*800.0f,(float)(screenWidth-pvcSize/2)) , (float)pvcSize/2.0f );
-    
-    switch (calcHit(dt, 0))
-    {
-    case 1: //morreu
-        
-        return (resultado){false,blocosDestruidos,false};
-    case 2: //ganhou
-        return (resultado){false,blocosDestruidos,true};
-    default:
-        return resultado();
-    }
+    int status = verificaColisao(dt);
+
+    if (status == 1)      return {false, blocosDestruidos, false};  // Derrota
+    else if (status == 2) return {false, blocosDestruidos, true};   // Vitória
+    else                  return resultado();                       // Continua
 }
 
-void w_load(int sw, int sh){
-    screenWidth = sw;
-    screenHeight = sh;
-    
-    for (int i = 0; i < 3; i++){
-        cout << "debug1" << endl;
-        Image fundo = LoadImage(TextFormat("..\\assets\\tijolo%d.png",i)); 
-        cout << "debug2" << endl;
-        ImageResize(&fundo, tileSizex, tileSizey);
-        cout << "debug3" << endl;
-        ttijolo[i] = LoadTextureFromImage(fundo);
-        cout << "debug4" << endl;
-        UnloadImage(fundo);
-    }
+// Carrega texturas dos tijolos
+void w_load(int sw, int sh) {
+    screenW = sw; screenH = sh;
 }
 
-void w_draw(float Tempo){
-    for (int x = 0; x < sizex; x++){
-        for (int y = 0; y < sizey; y++){
-            if (blocos[x][y].state > 0){;
+// Renderiza Mundo
+void w_draw(float tempo) {
+    // Blocos
+    for (int x = 0; x < sizex; x++) {
+        for (int y = 0; y < sizey; y++) {
+            if (blocos[x][y].state > 0) {
+
                 int corBase = blocos[x][y].colorBase;
-                Color temp = (Color){blocos[x][y].state == 1 ? corBase : 0,blocos[x][y].state == 2 ? corBase : 0,blocos[x][y].state == 3 ? corBase : 0,255};
-                DrawRectangle(screenWidth/sizex*x,screenHeight/sizey/2*y,screenWidth/sizex,screenHeight/sizey/2,temp);
-                //DrawTexture(ttijolo[blocos[x][y].state-1],screenWidth/sizex*x,screenHeight/sizey/2*y,WHITE);
+
+                Color c = {
+                    (unsigned char)(blocos[x][y].state == 1 ? corBase : 0),
+                    (unsigned char)(blocos[x][y].state == 2 ? corBase : 0),
+                    (unsigned char)(blocos[x][y].state == 3 ? corBase : 0), 255};
+
+                DrawRectangle(x * tileSx, y * tileSy, ceil(tileSx), ceil(tileSy), c);
             }
         }
     }
-    //DrawRectangle(coordx * tileSizex,coordy * tileSizey,tileSizex,tileSizey,GOLD);
-    DrawRectangle(pvcPos-pvcSize/2, screenWidth-50, pvcSize,20,GOLD);
-    DrawCircle((int)ballx, (int)bally, 5, WHITE);
 
-    DrawText(TextFormat("tijolos: %d/%d",blocosDestruidos,quantidadeDeBlocos), 20, 20, 20, YELLOW);
-    DrawText(TextFormat("tempo: %.2f",Tempo), 20, 40, 20, YELLOW);
+    // pvc e bola
+    DrawRectangle((int)(pvcX - pvcSize/2), pvcY, pvcSize, 20, GOLD);
+    DrawCircle((int)ballX, (int)ballY, 3, WHITE);
 
-    //DrawLine(debug_lastx,debug_lasty,debug_nowx,debug_nowy,GREEN);
+    // HUD
+    DrawText(TextFormat("Blocos: %d/%d", blocosDestruidos, totalBlocos), 10, 10, 20, YELLOW);
+    DrawText(TextFormat("Tempo: %.2f", tempo), 10, 35, 20, YELLOW);
 }

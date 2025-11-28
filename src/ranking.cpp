@@ -19,7 +19,7 @@ void salvarDados(const Jogador &jogador) {
                 << jogador.data << "," 
                 << jogador.tempo << "," 
                 << jogador.pontuacao << ","
-                << (jogador.venceu ? "VITORIA" : "DERROTA") << endl;
+                << (int)jogador.venceu << endl;
         arquivo.close();
     }
 }
@@ -44,15 +44,17 @@ vector<Jogador> carregarRanking() {
             linha.erase(0, pos + 1);
             
             pos = linha.find(",");
-            j.tempo = stoi(linha.substr(0, pos));
+            j.tempo = stof(linha.substr(0, pos));
             linha.erase(0, pos + 1);
             
             pos = linha.find(",");
             j.pontuacao = stoi(linha.substr(0, pos));
+            linha.erase(0, pos + 1);
 
             pos = linha.find(",");
-            j.venceu = (linha.substr(0, pos) == "VITORIA" ? true : false);
-            
+            j.venceu = stoi(linha.substr(0, pos)) == 1;
+
+
             jogadores.push_back(j);
         }
         arquivo.close();
@@ -95,11 +97,11 @@ void exibirRanking() {
             DrawText(TextFormat("%.3fs", jogadores[i].tempo), 400, y, 20, cor);
             
             // Data
-            DrawText(jogadores[i].data.c_str(), 500, y, 15, cor);
+            DrawText(jogadores[i].data.c_str(), 500, y, 20, cor);
             
             // Status
-            const char* status = jogadores[i].venceu ? "VITORIA" : "DERROTA";
-            DrawText(status, 600, y, 15, cor);
+            const char* status = jogadores[i].venceu ? "VIT." : "DER.";
+            DrawText(status, 630, y, 20, cor);
         }
     }
     

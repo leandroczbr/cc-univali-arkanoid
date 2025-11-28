@@ -1,7 +1,8 @@
 #pragma once
-
 #include <string>
 #include <vector>
+
+using namespace std;
 
 struct Jogador {
     string nome;
@@ -11,8 +12,7 @@ struct Jogador {
     bool venceu;
 };
 
-bool compararPontuacao(const Jogador &a, const Jogador &b);
-void salvarDados(const Jogador &jogador);
+void salvarDados(const Jogador& j);
 vector<Jogador> carregarRanking();
 void exibirRanking();
 string getDataAtual();
