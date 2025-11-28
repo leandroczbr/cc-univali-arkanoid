@@ -14,14 +14,19 @@ struct block
     int state = 0; // 0 = dead, state > 0 = vida
 };
 
-int screenWidth = 700;
-int screenHeight = 700;
+int screenWidth;
+int screenHeight;
 
 int blocosDestruidos;
 int quantidadeDeBlocos;
 
+Texture2D ttijolo[3];
+
 int pvcSize, sizex, sizey, coordx, coordy, newx, newy;
 float tileSizex, tileSizey, pvcPos, ballx, bally, ballvelx, ballvely;
+
+int dificuldade1;
+int pontuacao;
 
 float debug_lastx, debug_lasty, debug_nowx, debug_nowy;
 
@@ -29,7 +34,10 @@ bool morreu;
 
 vector<vector<block>> blocos;
 
-void start(int dificuldade){
+void start(int df, int pontos){
+
+    pontuacao = pontos;
+    dificuldade1 = df;
 
     cout << "mann" << endl;
     srand(time(0));
@@ -39,15 +47,15 @@ void start(int dificuldade){
     tileSizey = ((float)screenHeight/(float)sizey/2);
 
     pvcPos = screenWidth/2;
-    pvcSize = 500;
+    pvcSize = 200;
 
     blocosDestruidos = 0;
     quantidadeDeBlocos = sizex*sizey;
 
     ballx = pvcPos+2;
     bally = screenWidth-70+2;
-    ballvelx = 400.0f * (1 + (float)dificuldade/4);
-    ballvely = -400.0f * (1 + (float)dificuldade/4);
+    ballvelx = 400.0f * (1 + (float)dificuldade1/4);
+    ballvely = -400.0f * (1 + (float)dificuldade1/4);
 
     morreu = false;
 
@@ -164,26 +172,57 @@ int calcHit(float dt, int count){
     return 0;
 }
 
-bool w_update(float dt){
+resultado w_update(float dt){
+    
+
     float move = (IsKeyDown(KEY_D) ? 1.0 : 0.0)-(IsKeyDown(KEY_A) ? 1.0 : 0.0);
     pvcPos = max( min(pvcPos + move*dt*800.0f,(float)(screenWidth-pvcSize/2)) , (float)pvcSize/2.0f );
     
-    return calcHit(dt, 0);
+    switch (calcHit(dt, 0))
+    {
+    case 1: //morreu
+        
+        return (resultado){false,blocosDestruidos,false};
+    case 2: //ganhou
+        return (resultado){false,blocosDestruidos,true};
+    default:
+        return resultado();
+    }
 }
 
-void w_draw(){
+void w_load(int sw, int sh){
+    screenWidth = sw;
+    screenHeight = sh;
+    
+    for (int i = 0; i < 3; i++){
+        cout << "debug1" << endl;
+        Image fundo = LoadImage(TextFormat("..\\assets\\tijolo%d.png",i)); 
+        cout << "debug2" << endl;
+        ImageResize(&fundo, tileSizex, tileSizey);
+        cout << "debug3" << endl;
+        ttijolo[i] = LoadTextureFromImage(fundo);
+        cout << "debug4" << endl;
+        UnloadImage(fundo);
+    }
+}
+
+void w_draw(float Tempo){
     for (int x = 0; x < sizex; x++){
         for (int y = 0; y < sizey; y++){
             if (blocos[x][y].state > 0){;
                 int corBase = blocos[x][y].colorBase;
                 Color temp = (Color){blocos[x][y].state == 1 ? corBase : 0,blocos[x][y].state == 2 ? corBase : 0,blocos[x][y].state == 3 ? corBase : 0,255};
                 DrawRectangle(screenWidth/sizex*x,screenHeight/sizey/2*y,screenWidth/sizex,screenHeight/sizey/2,temp);
+                //DrawTexture(ttijolo[blocos[x][y].state-1],screenWidth/sizex*x,screenHeight/sizey/2*y,WHITE);
             }
         }
     }
     //DrawRectangle(coordx * tileSizex,coordy * tileSizey,tileSizex,tileSizey,GOLD);
     DrawRectangle(pvcPos-pvcSize/2, screenWidth-50, pvcSize,20,GOLD);
     DrawCircle((int)ballx, (int)bally, 5, WHITE);
+
+    DrawText(TextFormat("tijolos: %d/%d",blocosDestruidos,quantidadeDeBlocos), 20, 20, 20, BLACK);
+    DrawText(TextFormat("tempo: %.2f",Tempo), 20, 40, 20, BLACK);
 
     //DrawLine(debug_lastx,debug_lasty,debug_nowx,debug_nowy,GREEN);
 }

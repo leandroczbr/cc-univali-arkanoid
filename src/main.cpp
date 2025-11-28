@@ -5,6 +5,7 @@
 #include "world.h"
 #include "draw.h"
 #include "raylib.h"
+#include "ranking.h"
 
 using namespace std;
 
@@ -30,7 +31,25 @@ Rectangle botoes[] = {botaoStart,botaoRanking,botaoDificuldade};
 int fase = 0; // 0 = menu, 1 = ranking, 2 = dificuldade, 3 = fase_1, 4 = fase_2, 5 = fase 3
 int dificuldade = 0; // 0, 1, 2
 
+float tempo;
+int pontuacao;
+
 // int main
+
+void salvarPontuacao(bool venceu,int pontuacao) {
+    Jogador novoJogador;
+    novoJogador.nome = "Jogador";
+    novoJogador.data = getDataAtual();
+    novoJogador.tempo = tempo;
+    novoJogador.pontuacao = pontuacao;
+    novoJogador.venceu = venceu;
+    
+    salvarDados(novoJogador);
+    
+    // Debug
+    cout << "Pontuação salva: " << novoJogador.pontuacao << " pontos (" 
+         << (venceu ? "VITORIA" : "DERROTA") << ")" << endl;
+}
 
 int main(){
 
@@ -42,15 +61,19 @@ int main(){
 
     InitWindow(screenWidth, screenHeight, "raylib [shapes] example - basic shapes");
 
-    loadloadload(screenWidth,screenHeight);
+    SetExitKey(KEY_NULL);
+
+    d_load(screenWidth,screenHeight);
+    w_load(screenWidth,screenHeight);
     
     while (!WindowShouldClose())    // Detect window close button or ESC key
     {
         
+
         switch (fase)
         {
         case 0:
-              if (IsMouseButtonPressed(0)){
+            if (IsMouseButtonPressed(0)){
             int joy = -1;
             for (int i = 0; i<3; i++){
                 if (CheckCollisionPointRec(GetMousePosition(),botoes[i])){
@@ -63,6 +86,8 @@ int main(){
             case 0:
                 start(dificuldade);
                 fase = 3;
+                tempo = 0.0f;
+                pontuacao = 0;
                 break;
             case 1:
                 fase = 1;
@@ -76,7 +101,9 @@ int main(){
         }
             break;
         case 1:
-            /* code */
+            if (IsKeyPressed(KEY_ESCAPE)){
+                fase = 0;
+            }
             break;
         case 2:
             if (IsMouseButtonPressed(0)){
@@ -92,27 +119,33 @@ int main(){
         case 3:
         case 4:
         case 5:{
-            int result = w_update(GetFrameTime());
+            float dt = GetFrameTime();
+            tempo += dt;
+
+            resultado result = w_update(dt);
             
-            switch (result)
-            {
-                case 1: 
+            if (!result.nulo){
+                pontuacao += (result.blocosDestruidos*10) * (dificuldade+1);
+                if (result.ganhou) {
+                    if (fase == 5){
+                        salvarPontuacao(true,pontuacao * (int)(1000.0f - tempo));
+                        fase = 0;
+                    } else {
+                        fase ++;
+                        start(dificuldade,pontuacao);
+                    }
+                } else {
                     fase = 0;
-                break;
-                case 2: 
-                    fase ++;
-                    start(dificuldade);
-                break;
+                    salvarPontuacao(false,pontuacao * (int)(1000.0f - tempo));
+                }
             }
 
-
-        break;}
-        
+            break;}
         default:
             break;
         }
 
-        draw(fase,botoes);
+        draw(fase,botoes,tempo);
     }
 
     CloseWindow();

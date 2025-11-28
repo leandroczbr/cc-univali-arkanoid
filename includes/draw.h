@@ -2,6 +2,6 @@
 
 #include "raylib.h"
 
-void loadloadload(int sw, int sh);
+void d_load(int sw, int sh);
 
-void draw(int fase, Rectangle botoes[]);
+void draw(int fase, Rectangle botoes[],float Tempo);

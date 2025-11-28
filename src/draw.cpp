@@ -2,13 +2,14 @@
 #include "world.h"
 #include "draw.h"
 #include <iostream>
+#include "ranking.h"
 
 using namespace std;
 
 Texture2D tfundo;
 int sw2, sh2;
 
-void loadloadload(int sw, int sh){
+void d_load(int sw, int sh){
     sw2 = sw;
     sh2 = sh;
     cout << "debug1" << endl;
@@ -21,30 +22,29 @@ void loadloadload(int sw, int sh){
     UnloadImage(fundo);
 }
 
-void draw(int fase, Rectangle botoes[]){
+void draw(int fase, Rectangle botoes[],int Tempo){
 
     BeginDrawing();
 
     ClearBackground(BLACK);
 
-    if (fase > 2){ w_draw(); EndDrawing(); return; }
+    DrawTexture(tfundo, 0, 0, WHITE);  
 
+    cout << fase << endl;
     switch (fase)
     {
-    case 0:
-        cout << "debug5" << endl;
-        DrawTexture(tfundo, 0, 0, WHITE);  
-        cout << "IMAGEMMMMMMMM" << endl;
+    case 0:{  // 0 = menu, 1 = ranking, 2 = dificuldade, 3 = fase_1, 4 = fase_2, 5 = fase 3
+        
         for(int i = 0; i < 3; i++){
             DrawRectangleRec(botoes[i], CheckCollisionPointRec(GetMousePosition(),botoes[i]) ? BLUE : GOLD);
         }
         DrawText("Iniciar jogo", botoes[0].x+20, botoes[0].y+10, 20, DARKGRAY);
         DrawText("Ranking", botoes[1].x+20, botoes[1].y+10, 20, DARKGRAY);
         DrawText("Dificuldade", botoes[2].x+20, botoes[2].y+10, 20, DARKGRAY);
-        break;
-    case 1:
-        /* code */
-        break;
+        break;}
+    case 1:{
+        exibirRanking();
+        break;}
     case 2:
         for(int i = 0; i < 3; i++){
             DrawRectangleRec(botoes[i], CheckCollisionPointRec(GetMousePosition(),botoes[i]) ? BLUE : GOLD);
@@ -68,5 +68,8 @@ void draw(int fase, Rectangle botoes[]){
         break;
     }
 
+    if (fase > 2){ w_draw(Tempo); }
+
     EndDrawing();
+    return;
 };
