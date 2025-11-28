@@ -221,8 +221,8 @@ void w_draw(float Tempo){
     DrawRectangle(pvcPos-pvcSize/2, screenWidth-50, pvcSize,20,GOLD);
     DrawCircle((int)ballx, (int)bally, 5, WHITE);
 
-    DrawText(TextFormat("tijolos: %d/%d",blocosDestruidos,quantidadeDeBlocos), 20, 20, 20, BLACK);
-    DrawText(TextFormat("tempo: %.2f",Tempo), 20, 40, 20, BLACK);
+    DrawText(TextFormat("tijolos: %d/%d",blocosDestruidos,quantidadeDeBlocos), 20, 20, 20, YELLOW);
+    DrawText(TextFormat("tempo: %.2f",Tempo), 20, 40, 20, YELLOW);
 
     //DrawLine(debug_lastx,debug_lasty,debug_nowx,debug_nowy,GREEN);
 }
